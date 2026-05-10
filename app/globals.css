@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-fraunces);
+  --font-mono: var(--font-geist-mono);
+}
+
+:root {
+  --background: #FAFAF7;
+  --surface: #FFFFFF;
+  --surface-2: #F3F1EA;
+  --foreground: #0F1418;
+  --muted: #5C6770;
+  --border: #E5E2DA;
+  --border-strong: #D4D0C4;
+  --accent: #8B5F22;
+  --accent-soft: rgba(139, 95, 34, 0.10);
+}
+
+.dark {
+  --background: #0B0F14;
+  --surface: #11161D;
+  --surface-2: #161C25;
+  --foreground: #E8ECEF;
+  --muted: #8693A0;
+  --border: #1E2630;
+  --border-strong: #2A333D;
+  --accent: #D4A574;
+  --accent-soft: rgba(212, 165, 116, 0.12);
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+  color-scheme: dark;
+}
+
+html:not(.dark) {
+  color-scheme: light;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--background);
+}
+
+@keyframes dk-marquee {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+
+.dk-marquee {
+  animation: dk-marquee 42s linear infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .dk-marquee {
+    animation: none;
+  }
+}

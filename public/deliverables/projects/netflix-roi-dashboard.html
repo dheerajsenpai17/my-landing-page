@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Netflix Japan ROI Dashboard</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #FAFAFA;
+    color: #1A1A1A;
+    margin: 0;
+    padding: 2rem;
+    line-height: 1.5;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;
+  }
+  .title { font-size: 22px; font-weight: 600; margin: 0; }
+  .subtitle { font-size: 14px; color: #666; margin-top: 4px; }
+  .scenario-buttons { display: flex; gap: 6px; }
+  .scenario-buttons button {
+    padding: 8px 14px; font-size: 13px; background: white;
+    border: 1px solid #DDD; border-radius: 6px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .scenario-buttons button:hover { background: #F0F0F0; }
+  .scenario-buttons button.active {
+    background: #FFE5E5; border-color: #CC0000;
+    color: #CC0000; font-weight: 500;
+  }
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 1rem; }
+  .kpi-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+  .kpi-card {
+    background: white; border: 1px solid #EEE;
+    border-radius: 8px; padding: 1rem 1.25rem;
+  }
+  .kpi-label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+  .kpi-value { font-size: 26px; font-weight: 600; margin-top: 6px; color: #1A1A1A; }
+  .kpi-value.red { color: #CC0000; }
+  .kpi-value.green { color: #0F6E56; }
+  .section-title { font-size: 14px; font-weight: 600; margin: 0 0 12px; color: #333; }
+  .chart-wrap, .table-wrap {
+    background: white; border: 1px solid #EEE;
+    border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem;
+  }
+  .chart-container { position: relative; height: 280px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; color: #888; font-weight: 500; padding: 8px 12px; border-bottom: 1px solid #EEE; }
+  th.right, td.right { text-align: right; }
+  td { padding: 10px 12px; border-bottom: 1px solid #F5F5F5; }
+  tr:last-child td { border-bottom: none; }
+  td.green { color: #0F6E56; font-weight: 500; }
+  td.red { color: #CC0000; font-weight: 500; }
+  td.blue { color: #1A5276; }
+  @media (max-width: 700px) {
+    .kpi-grid, .kpi-grid-3 { grid-template-columns: repeat(2, 1fr); }
+    body { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div>
+      <h1 class="title">Netflix Japan ROI dashboard</h1>
+      <div class="subtitle">Five-year glocalization strategy projection</div>
+    </div>
+    <div class="scenario-buttons" id="scenario-buttons">
+      <button data-s="cons">Conservative</button>
+      <button data-s="base" class="active">Base</button>
+      <button data-s="opt">Optimistic</button>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-label">5-year investment</div><div class="kpi-value" id="m-inv">$2.8B</div></div>
+    <div class="kpi-card"><div class="kpi-label">5-year revenue</div><div class="kpi-value red" id="m-rev">$5.2B</div></div>
+    <div class="kpi-card"><div class="kpi-label">Net profit</div><div class="kpi-value green" id="m-net">+$2.4B</div></div>
+    <div class="kpi-card"><div class="kpi-label">5-year ROI</div><div class="kpi-value green" id="m-roi">84%</div></div>
+  </div>
+
+  <div class="kpi-grid-3">
+    <div class="kpi-card"><div class="kpi-label">Payback period</div><div class="kpi-value" style="font-size:20px" id="m-pay">~24 months</div></div>
+    <div class="kpi-card"><div class="kpi-label">Year 1 implementation</div><div class="kpi-value" style="font-size:20px">$78M</div></div>
+    <div class="kpi-card"><div class="kpi-label">Year 5 subscribers</div><div class="kpi-value" style="font-size:20px" id="m-sub">16.5M</div></div>
+  </div>
+
+  <div class="chart-wrap">
+    <div class="section-title">Year-by-year financial position</div>
+    <div class="chart-container"><canvas id="chart"></canvas></div>
+  </div>
+
+  <div class="table-wrap">
+    <div class="section-title">Annual breakdown</div>
+    <div id="table"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script>
+const data = {
+  cons: { inv:[378,475,560,605,635], rev:[180,420,750,1050,1280], roi:55, pay:'30-36 months', sub:'14.5M', net:1050, totalInv:2653, totalRev:3680 },
+  base: { inv:[368,503,610,665,692], rev:[310,630,1070,1450,1770], roi:84, pay:'~24 months', sub:'16.5M', net:2392, totalInv:2838, totalRev:5230 },
+  opt:  { inv:[358,520,640,705,745], rev:[495,890,1450,1900,2300], roi:130, pay:'12-16 months', sub:'18.5M', net:4252, totalInv:2968, totalRev:7035 }
+};
+
+let chart;
+function fmt(n) {
+  if (Math.abs(n) >= 1000) return '$' + (n/1000).toFixed(1) + 'B';
+  return '$' + Math.round(n) + 'M';
+}
+
+function update(s) {
+  const d = data[s];
+  document.getElementById('m-inv').textContent = fmt(d.totalInv);
+  document.getElementById('m-rev').textContent = fmt(d.totalRev);
+  document.getElementById('m-net').textContent = '+' + fmt(d.net);
+  document.getElementById('m-roi').textContent = d.roi + '%';
+  document.getElementById('m-pay').textContent = d.pay;
+  document.getElementById('m-sub').textContent = d.sub;
+  document.querySelectorAll('#scenario-buttons button').forEach(b => {
+    b.classList.toggle('active', b.dataset.s === s);
+  });
+  if (chart) {
+    chart.data.datasets[0].data = d.inv;
+    chart.data.datasets[1].data = d.rev;
+    chart.update();
+  }
+  let cum = 0;
+  const rows = d.inv.map((inv, i) => {
+    const rev = d.rev[i];
+    const net = rev - inv;
+    cum += net;
+    const netClass = net >= 0 ? 'green' : 'red';
+    const cumClass = cum >= 0 ? 'green' : 'red';
+    return `<tr>
+      <td><strong>Year ${i+1}</strong></td>
+      <td class="right">${fmt(inv)}</td>
+      <td class="right blue">${fmt(rev)}</td>
+      <td class="right ${netClass}">${net >= 0 ? '+' : ''}${fmt(net)}</td>
+      <td class="right ${cumClass}">${cum >= 0 ? '+' : ''}${fmt(cum)}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('table').innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Year</th>
+        <th class="right">Investment</th>
+        <th class="right">Revenue</th>
+        <th class="right">Net</th>
+        <th class="right">Cumulative</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+const ctx = document.getElementById('chart').getContext('2d');
+chart = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: ['Year 1','Year 2','Year 3','Year 4','Year 5'],
+    datasets: [
+      { label: 'Investment ($M)', data: data.base.inv, backgroundColor: '#888780', borderRadius: 4 },
+      { label: 'Revenue ($M)', data: data.base.rev, backgroundColor: '#CC0000', borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom', labels: { font: { size: 12 } } } },
+    scales: {
+      y: { beginAtZero: true, ticks: { callback: v => '$' + v + 'M', font: { size: 11 } }, grid: { color: 'rgba(128,128,128,0.1)' } },
+      x: { ticks: { font: { size: 11 } }, grid: { display: false } }
+    }
+  }
+});
+
+document.querySelectorAll('#scenario-buttons button').forEach(b => {
+  b.addEventListener('click', () => update(b.dataset.s));
+});
+
+update('base');
+</script>
+</body>
+</html>
