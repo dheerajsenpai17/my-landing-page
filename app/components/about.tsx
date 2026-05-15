@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { ease } from "@/app/lib/motion";
 import SectionDivider from "./section-divider";
@@ -73,13 +74,13 @@ export default function About() {
         </div>
 
         <div className="mt-10 grid gap-10 md:mt-14 md:grid-cols-12 md:items-start md:gap-14">
-          <PhotoPlaceholder />
+          <Portrait />
           <motion.div
             variants={proseParent}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.25 }}
-            className="md:col-span-7 md:col-start-6 lg:col-span-6 lg:col-start-7"
+            className="md:col-span-7 md:col-start-1 md:row-start-1 lg:col-span-6"
           >
             <motion.p
               variants={proseChild}
@@ -138,30 +139,22 @@ function Fact({
   );
 }
 
-function PhotoPlaceholder() {
+function Portrait() {
   return (
     <motion.figure
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.3 }}
       transition={{ duration: 0.8, ease: ease.out }}
-      className="relative aspect-[4/5] w-full overflow-hidden rounded-sm border border-border-strong bg-surface-2 md:col-span-5"
+      className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl border border-border-strong bg-surface-2 shadow-xl shadow-black/10 ring-1 ring-black/[0.04] md:col-span-5 md:col-start-8 md:row-start-1"
     >
-      <span className="absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-full border border-border-strong bg-surface px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.18em] text-muted">
-        <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent" />
-        Placeholder
-      </span>
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-        <span className="font-display text-7xl font-normal text-foreground/25">
-          DK
-        </span>
-        <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted">
-          Portrait
-        </span>
-      </div>
-      <figcaption className="absolute inset-x-4 bottom-4 font-mono text-[9px] uppercase tracking-[0.2em] text-muted">
-        ↳ replace with /public/portrait.jpg
-      </figcaption>
+      <Image
+        src="/images/dheeraj.jpg"
+        alt="Dheeraj Kumar"
+        fill
+        sizes="(min-width: 768px) 42vw, 100vw"
+        className="object-cover object-[center_22%]"
+      />
     </motion.figure>
   );
 }
